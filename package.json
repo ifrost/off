@@ -1,0 +1,19 @@
+{
+  "name": "off",
+  "version": "1.0.0",
+  "description": "",
+  "main": "off.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://ifrost@github.com/ifrost/off.git"
+  },
+  "author": "Piotr Jamroz <pm.jamroz@gmail.com> (https://about.me/piotr.jamroz)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ifrost/off/issues"
+  },
+  "homepage": "https://github.com/ifrost/off"
+}
