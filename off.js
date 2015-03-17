@@ -65,8 +65,15 @@
 				return _value;
 			}
 		});
+		property.bind = function(handler) {
+			property.add(handler);
+			if (property() !== undefined) {
+				handler(property());
+			}
+		};
+		
 		return property;
-	};
+	};	
 
 	(typeof module != "undefined" && module.exports) ? (module.exports = off) : (typeof define != "undefined" ? (define("off", [], function () {
 		return off;

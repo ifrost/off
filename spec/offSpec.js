@@ -148,6 +148,15 @@ describe('off', function () {
 			expect(prefix()).toEqual('prefix: test');
 
 		});
+		
+		it('should run handler added with bind() if value is defined', function(){
+		
+			property(20);
+			
+			property.bind(handler);
+			
+			expect(handler).toHaveBeenCalledWith(20);
+		});
 
 	});
 
