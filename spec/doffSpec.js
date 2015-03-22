@@ -3,7 +3,7 @@ describe('doff', function () {
 	var doff = require('../doff'),
 		off = require('../off');
 
-	it('...', function () {
+	it('should run renderers only after component is initialized', function () {
 
 		var textf = doff.extend(function (comp) {
 			comp.text = comp.render_property();
@@ -111,28 +111,48 @@ describe('doff', function () {
 
 	it('should allow to block render if not all observed properties are set', function () {
 		var spy = jasmine.createSpy();
-			compf = doff.extend(function (comp) {
-				comp.render = off(spy);
-				comp.foo = comp.property().add(comp.render);
-				comp.bar = comp.property().add(comp.render);
-				
-				comp.render.before(doff.check_any_not_set(comp.foo, comp.bar));
-			});
-		
+		compf = doff.extend(function (comp) {
+			comp.render = off(spy);
+			comp.foo = comp.property().add(comp.render);
+			comp.bar = comp.property().add(comp.render);
+
+			comp.render.before(doff.check_any_not_set(comp.foo, comp.bar));
+		});
+
 		var comp = compf();
-		
+
 		comp.foo(1);
 		expect(spy.calls.count()).toEqual(0);
-		
+
 		comp.init();
 		expect(spy.calls.count()).toEqual(0);
-		
+
 		comp.foo(2);
 		expect(spy.calls.count()).toEqual(0);
-		
+
 		comp.bar(3);
 		expect(spy.calls.count()).toEqual(1);
 
+	});
+
+	it('should not run renderers when component is destroyed', function () {
+		var compf = doff.extend(function (comp) {
+			comp.foo = comp.render_property();
+			comp.render = jasmine.createSpy();
+		}, doff.component);
+		
+		var comp = compf();
+		comp.init();
+		
+		expect(comp.render.calls.count()).toEqual(0);
+		
+		comp.foo(1);
+		expect(comp.render.calls.count()).toEqual(1);
+		
+		comp.destroy();
+		comp.foo(2);
+		expect(comp.render.calls.count()).toEqual(1);
+		
 	});
 
 });

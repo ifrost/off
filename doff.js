@@ -26,6 +26,10 @@
 		component.init = function () {
 			this.initialized(true);
 		};
+		
+		component.destroy = function() {
+			this.initialized(false);
+		};
 
 		component.render_property = function () {
 			var property = this.property();
