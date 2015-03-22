@@ -4,15 +4,16 @@
 
 	doff.component = function () {
 		var component = {};
+
 		component.initialized = off.property();
 		component.property = function (default_value) {
-			return off.property(function (value, guard) {
+			return off.property(default_value, function (value, guard) {
 				if (guard() === value) {
 					guard.property.lock = true;
 				}
 				guard(value);
 				return component.initialized() ? guard() : component.initialized;
-			}, default_value);
+			});
 		};
 
 		component.renderer = doff.renderer;
@@ -23,19 +24,39 @@
 			this.render();
 		};
 
-		component.init = function () {
+		component.init = off(function () {
 			this.initialized(true);
-		};
-		
-		component.destroy = function() {
+		});
+
+		component.destroy = off(function () {
 			this.initialized(false);
-		};
+		});
 
 		component.render_property = function () {
 			var property = this.property();
 			property.add(this.$render);
 			return property;
 		};
+
+		component.children = off.property([]);
+		component.add = off(function (child) {
+			this.children().push(child);
+			if (this.initialized()) {
+				child.init();
+			}
+		});
+
+		component.initialized.add(function () {
+			this.children().forEach(function (child) {
+				child.init();
+			});
+		});
+
+		component.destroy.add(function () {
+			this.children().forEach(function (child) {	
+				child.destroy();
+			});
+		});
 
 		return component;
 	};

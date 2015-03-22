@@ -140,19 +140,72 @@ describe('doff', function () {
 			comp.foo = comp.render_property();
 			comp.render = jasmine.createSpy();
 		}, doff.component);
-		
+
 		var comp = compf();
 		comp.init();
-		
+
 		expect(comp.render.calls.count()).toEqual(0);
-		
+
 		comp.foo(1);
 		expect(comp.render.calls.count()).toEqual(1);
-		
+
 		comp.destroy();
 		comp.foo(2);
 		expect(comp.render.calls.count()).toEqual(1);
+
+	});
+
+	it('should allow to add children components', function () {
+		var parent = doff.component(),
+			child1 = doff.component(),
+			child2 = doff.component();
 		
+		parent.add(child1);
+		parent.add(child2);
+		
+		expect(parent.children().length).toEqual(2);
+	});
+
+	it('should initialize children added after initialization', function () {
+		var parent = doff.component(),
+			compf = doff.extend(function (comp) {
+				comp.init = jasmine.createSpy();
+			}),
+			child = compf();
+		
+		parent.init();
+		parent.add(child);
+		
+		expect(child.init.calls.count()).toEqual(1);
+	});
+
+	it('should initialize all children when parent is initialized', function () {
+		var parent = doff.component(),
+			compf = doff.extend(function (comp) {
+				comp.init = jasmine.createSpy();
+			}),
+			child = compf();
+		
+		parent.add(child);
+		expect(child.init.calls.count()).toEqual(0);
+		
+		parent.init();
+		expect(child.init.calls.count()).toEqual(1);
+	});
+
+	it('should destroy all children when parent is destroyed', function () {
+	var parent = doff.component(),
+			compf = doff.extend(function (comp) {
+				comp.destroy = jasmine.createSpy();
+			}),
+			child = compf();
+		
+	
+		parent.init();
+		parent.add(child);
+		parent.destroy();
+		
+		expect(child.destroy.calls.count()).toEqual(1);
 	});
 
 });

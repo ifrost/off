@@ -71,7 +71,7 @@
 		});
 	};
 
-	off.property = function (setter, initial_value) {
+	off.property = function (initial_value, setter) {
 		var _value = initial_value,
 			property, $guard;
 

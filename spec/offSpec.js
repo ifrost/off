@@ -142,9 +142,9 @@ describe('off', function () {
 		});
 
 		it('should accept custom setters', function () {
-			var increment = off.property(function (value, guard) {
+			var increment = off.property(0, function (value, guard) {
 				guard(guard() + value);
-			}, 0);
+			});
 
 			increment(2);
 			expect(increment()).toEqual(2);
