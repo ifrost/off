@@ -75,12 +75,12 @@ describe('doff', function () {
 	});
 
 	it('should run render function passing correct property value', function (done) {
-		var compf = doff.extend(function (comp) {
-			comp.render_text = doff.renderer(function (text) {
+		var compf = doff.extend(function (proto) {
+			this.render_text = doff.renderer(function (text) {
 				expect(text).toEqual("foobar");
 				done();
 			});
-			comp.text = comp.property().add(comp.render_text);
+			this.text = this.property().add(this.render_text);
 		}, doff.component);
 
 		var comp = compf();
@@ -92,9 +92,9 @@ describe('doff', function () {
 
 	it('should run render function only once per frame', function (done) {
 		var spy = jasmine.createSpy(),
-			compf = doff.extend(function (comp) {
-				comp.render = doff.renderer(spy);
-				comp.foo = comp.property().add(comp.render);
+			compf = doff.extend(function (proto) {
+				this.render = doff.renderer(spy);
+				this.foo = this.property().add(this.render);
 			});
 
 		var comp = compf();
@@ -111,12 +111,12 @@ describe('doff', function () {
 
 	it('should allow to block render if not all observed properties are set', function () {
 		var spy = jasmine.createSpy();
-		compf = doff.extend(function (comp) {
-			comp.render = off(spy);
-			comp.foo = comp.property().add(comp.render);
-			comp.bar = comp.property().add(comp.render);
+		compf = doff.extend(function (proto) {
+			this.render = off(spy);
+			this.foo = this.property().add(this.render);
+			this.bar = this.property().add(this.render);
 
-			comp.render.before(doff.check_any_not_set(comp.foo, comp.bar));
+			this.render.before(doff.lock_if_not_set(this.foo, this.bar));
 		});
 
 		var comp = compf();
@@ -136,9 +136,9 @@ describe('doff', function () {
 	});
 
 	it('should not run renderers when component is destroyed', function () {
-		var compf = doff.extend(function (comp) {
-			comp.foo = comp.render_property();
-			comp.render = jasmine.createSpy();
+		var compf = doff.extend(function (proto) {
+			this.foo = this.render_property();
+			this.render = jasmine.createSpy();
 		}, doff.component);
 
 		var comp = compf();
@@ -163,13 +163,13 @@ describe('doff', function () {
 		parent.add(child1);
 		parent.add(child2);
 		
-		expect(parent.children().length).toEqual(2);
+		expect(parent.children.length).toEqual(2);
 	});
 
 	it('should initialize children added after initialization', function () {
 		var parent = doff.component(),
-			compf = doff.extend(function (comp) {
-				comp.init = jasmine.createSpy();
+			compf = doff.extend(function (proto) {
+				this.init = jasmine.createSpy();
 			}),
 			child = compf();
 		
@@ -181,8 +181,8 @@ describe('doff', function () {
 
 	it('should initialize all children when parent is initialized', function () {
 		var parent = doff.component(),
-			compf = doff.extend(function (comp) {
-				comp.init = jasmine.createSpy();
+			compf = doff.extend(function (proto) {
+				this.init = jasmine.createSpy();
 			}),
 			child = compf();
 		
@@ -195,8 +195,8 @@ describe('doff', function () {
 
 	it('should destroy all children when parent is destroyed', function () {
 	var parent = doff.component(),
-			compf = doff.extend(function (comp) {
-				comp.destroy = jasmine.createSpy();
+			compf = doff.extend(function (proto) {
+				this.destroy = jasmine.createSpy();
 			}),
 			child = compf();
 	
