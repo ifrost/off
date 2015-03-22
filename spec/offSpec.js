@@ -3,16 +3,19 @@ describe('off', function () {
 	var off = require('../off'),
 		handler,
 		fn,
-		async;
+		async,
+		throttled_async;
 
 	beforeEach(function () {
 		handler = jasmine.createSpy();
 		fn = off(function () {});
-		async = off(function () {
-			var result_callback = off.signal();
-			setTimeout(result_callback, 10);
-			return result_callback;
+		async = off.async(function (callback) {
+			setTimeout(callback, 10);
 		});
+
+		throttled_async = off.async(function (callback) {
+			setTimeout(callback, 10);
+		}, true);
 	});
 
 	it('should run handlers after running wrapped function', function () {
@@ -139,25 +142,136 @@ describe('off', function () {
 		});
 
 		it('should accept custom setters', function () {
-			var prefix = off.property(function (value) {
-				return 'prefix: ' + value;
-			});
+			var increment = off.property(function (value, guard) {
+				guard(guard() + value);
+			}, 0);
 
-			prefix('test');
+			increment(2);
+			expect(increment()).toEqual(2);
 
-			expect(prefix()).toEqual('prefix: test');
+			increment(3);
+			expect(increment()).toEqual(5);
 
 		});
-		
-		it('should run handler added with bind() if value is defined', function(){
-		
+
+		it('should run handler added with bind() if value is defined', function () {
+
 			property(20);
-			
+
 			property.bind(handler);
-			
+
 			expect(handler).toHaveBeenCalledWith(20);
 		});
 
+		it('should not allow to add same handler multiple times', function () {
+			fn.add(handler);
+			fn.add(handler);
+
+			fn();
+			expect(handler.calls.count()).toEqual(1);
+
+		});
+
+		it('should allow to run the last async callback when called multiple times', function (done) {
+			throttled_async.add(handler);
+
+			throttled_async();
+			throttled_async();
+			throttled_async();
+
+			setTimeout(function () {
+				expect(handler.calls.count()).toEqual(1);
+				done();
+			}, 20);
+		});
+
+		it('should correctly handle context of the sync handler', function () {
+			var context = {
+				action: fn,
+				handler: function () {
+					expect(this).toEqual(context);
+				}
+			};
+
+			context.action.add(context.handler);
+			context.action();
+		});
+
+		it('should correctly handle context of the async handler', function (done) {
+			var context = {
+				action: async,
+				handler: function () {
+					expect(this).toEqual(context);
+					done();
+				}
+			};
+
+			context.action.add(context.handler);
+			context.action();
+		});
+		
+		it('should allow deffered call', function(done) {
+			var action = function(value) {
+				expect(value).toEqual(10);				
+				return 10;				
+			};
+			var handler = function(value) {
+				expect(value).toEqual(10);
+				done();
+			}
+			var deferred = off.deferred(action, function(fn){
+				setTimeout(fn, 40);
+			});
+			
+			deferred.add(handler);
+			
+			deferred(1);
+			deferred(5);
+			deferred(10);
+			
+		});
+		
+		it('should allow to a before handler', function() {
+			var result = '';
+			var before = function() {
+				result += 'a';
+			};
+			var action = off(function() {
+				result += 'b';
+			});
+			var after = function() {
+				result += 'c';
+			};
+		
+			action.add(after);
+			action.before(before);
+			
+			action();
+			
+			expect(result).toEqual("abc");
+		});
+		
+		it('should allow to lock action', function() {
+			var result = '';
+			var before = function() {
+				result += 'a';
+				return true;
+			};
+			var action = off(function() {
+				result += 'b';
+			});
+			var after = function() {
+				result += 'c';
+			};
+		
+			action.add(after);
+			action.before(before);
+			
+			action();
+			
+			expect(result).toEqual("a");		
+		});
+		
 	});
 
 })
