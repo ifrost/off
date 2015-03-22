@@ -199,7 +199,6 @@ describe('doff', function () {
 				comp.destroy = jasmine.createSpy();
 			}),
 			child = compf();
-		
 	
 		parent.init();
 		parent.add(child);
