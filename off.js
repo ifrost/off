@@ -1,25 +1,34 @@
-(function (g) {
-
+(function (root, factory) {
+	if (typeof define === "function" && define.amd) {
+		define(function () {
+			return (root.off = factory());
+		});
+	} else if (typeof module === "object" && module.exports) {
+		module.exports = (root.off = factory());
+	} else {
+		root.off = factory();
+	}
+})(this, function () {
 	var off = function (func, context) {
 		var _handlers = [],
 			_before = [];
-		
+
 		func = func || function () {};
 
 		var runner = function () {
 			var self = context || this,
 				args, blocked, result;
-			
+
 			args = Array.prototype.slice.call(arguments, 0);
 
-			blocked = _before.some(function(handler){
+			blocked = _before.some(function (handler) {
 				return handler.apply(this, args);
 			});
-			
+
 			if (blocked) {
 				return;
 			}
-			
+
 			result = func.apply(this, args);
 
 			if (runner.lock) {
@@ -61,7 +70,7 @@
 		};
 
 		runner._off = true;
-		
+
 		runner.func = func;
 
 		return runner;
@@ -98,7 +107,7 @@
 				handler(property());
 			}
 		};
-		property.reset = function() {
+		property.reset = function () {
 			return property(_reset);
 		};
 
@@ -152,8 +161,5 @@
 		return deferred;
 	};
 
-	(typeof module != "undefined" && module.exports) ? (module.exports = off) : (typeof define != "undefined" ? (define("off", [], function () {
-		return off;
-	})) : (g.off = off));
-
-})(this);
+	return off;
+});

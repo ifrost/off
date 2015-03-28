@@ -1,10 +1,11 @@
 {
   "name": "off",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "off.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jasmine",
+	"prepublish": "uglifyjs off.js --mangle --compress -o off-min.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/ifrost/off/issues"
   },
-  "homepage": "https://github.com/ifrost/off"
+  "homepage": "https://github.com/ifrost/off",
+  "devDependencies": {
+    "uglifyjs": "^2.4.10"
+  }
 }
