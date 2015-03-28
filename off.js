@@ -61,6 +61,8 @@
 		};
 
 		runner._off = true;
+		
+		runner.func = func;
 
 		return runner;
 	};
@@ -73,7 +75,7 @@
 
 	off.property = function (initial_value, setter) {
 		var _value = initial_value,
-			property, $guard;
+			property, $guard, _reset = {};
 
 		setter = setter || function (value, guard) {
 			if (guard() === value) {
@@ -82,8 +84,8 @@
 			return guard(value);
 		};
 
-		property = off(function (value) {
-			if (arguments.length === 0) {
+		property = off(function (value, reset) {
+			if (arguments.length === 0 && reset !== _reset) {
 				property.lock = true;
 				return _value;
 			} else {
@@ -96,6 +98,9 @@
 				handler(property());
 			}
 		};
+		property.reset = function() {
+			return property(_reset);
+		};
 
 		$guard = function (value) {
 			if (arguments.length) {
@@ -104,6 +109,7 @@
 			return _value;
 		};
 		$guard.property = property;
+		property.property = true;
 
 		return property;
 	};
@@ -136,13 +142,11 @@
 				deferring_function(function () {
 					result = func.apply(this, last_args);
 					_pending = false;
-					$final_callback = final_callback;
-					final_callback = null;
-					$final_callback(result);
+					final_callback(result);
 				});
-				return $final_callback;
+				return final_callback;
 			}
-			return $final_callback;
+			return final_callback;
 		});
 
 		return deferred;

@@ -86,6 +86,115 @@ describe('off', function () {
 		}, 40);
 	});
 
+	it('should not allow to add same handler multiple times', function () {
+		fn.add(handler);
+		fn.add(handler);
+
+		fn();
+		expect(handler.calls.count()).toEqual(1);
+
+	});
+
+	it('should run only the last async callback when called multiple times', function (done) {
+		throttled_async.add(handler);
+
+		throttled_async();
+		throttled_async();
+		throttled_async();
+
+		setTimeout(function () {
+			expect(handler.calls.count()).toEqual(1);
+			done();
+		}, 20);
+	});
+
+	it('should correctly handle context of the sync handler', function () {
+		var context = {
+			action: fn,
+			handler: function () {
+				expect(this).toEqual(context);
+			}
+		};
+
+		context.action.add(context.handler);
+		context.action();
+	});
+
+	it('should correctly handle context of the async handler', function (done) {
+		var context = {
+			action: async,
+			handler: function () {
+				expect(this).toEqual(context);
+				done();
+			}
+		};
+
+		context.action.add(context.handler);
+		context.action();
+	});
+
+	it('should allow making a deffered call', function (done) {
+		var action = function (value) {
+			expect(value).toEqual(10);
+			return 10;
+		};
+		var handler = function (value) {
+			expect(value).toEqual(10);
+			done();
+		}
+		var deferred = off.deferred(action, function (fn) {
+			setTimeout(fn, 40);
+		});
+
+		deferred.add(handler);
+
+		deferred(1);
+		deferred(5);
+		deferred(10);
+
+	});
+
+	it('should allow to add a before handler', function () {
+		var result = '';
+		var before = function () {
+			result += 'a';
+		};
+		var action = off(function () {
+			result += 'b';
+		});
+		var after = function () {
+			result += 'c';
+		};
+
+		action.add(after);
+		action.before(before);
+
+		action();
+
+		expect(result).toEqual("abc");
+	});
+
+	it('should allow to lock an action', function () {
+		var result = '';
+		var before = function () {
+			result += 'a';
+			return true;
+		};
+		var action = off(function () {
+			result += 'b';
+		});
+		var after = function () {
+			result += 'c';
+		};
+
+		action.add(after);
+		action.before(before);
+
+		action();
+
+		expect(result).toEqual("a");
+	});
+
 	describe('signal', function () {
 
 		var signal;
@@ -163,115 +272,17 @@ describe('off', function () {
 			expect(handler).toHaveBeenCalledWith(20);
 		});
 
-		it('should not allow to add same handler multiple times', function () {
-			fn.add(handler);
-			fn.add(handler);
+		it('should allow to reset the value to re-run all handlers', function () {
+			property.add(handler);
 
-			fn();
+			property(11);
+			property(11);
+
 			expect(handler.calls.count()).toEqual(1);
 
+			property.reset();
+			expect(handler.calls.count()).toEqual(2);
 		});
-
-		it('should allow to run the last async callback when called multiple times', function (done) {
-			throttled_async.add(handler);
-
-			throttled_async();
-			throttled_async();
-			throttled_async();
-
-			setTimeout(function () {
-				expect(handler.calls.count()).toEqual(1);
-				done();
-			}, 20);
-		});
-
-		it('should correctly handle context of the sync handler', function () {
-			var context = {
-				action: fn,
-				handler: function () {
-					expect(this).toEqual(context);
-				}
-			};
-
-			context.action.add(context.handler);
-			context.action();
-		});
-
-		it('should correctly handle context of the async handler', function (done) {
-			var context = {
-				action: async,
-				handler: function () {
-					expect(this).toEqual(context);
-					done();
-				}
-			};
-
-			context.action.add(context.handler);
-			context.action();
-		});
-		
-		it('should allow deffered call', function(done) {
-			var action = function(value) {
-				expect(value).toEqual(10);				
-				return 10;				
-			};
-			var handler = function(value) {
-				expect(value).toEqual(10);
-				done();
-			}
-			var deferred = off.deferred(action, function(fn){
-				setTimeout(fn, 40);
-			});
-			
-			deferred.add(handler);
-			
-			deferred(1);
-			deferred(5);
-			deferred(10);
-			
-		});
-		
-		it('should allow to a before handler', function() {
-			var result = '';
-			var before = function() {
-				result += 'a';
-			};
-			var action = off(function() {
-				result += 'b';
-			});
-			var after = function() {
-				result += 'c';
-			};
-		
-			action.add(after);
-			action.before(before);
-			
-			action();
-			
-			expect(result).toEqual("abc");
-		});
-		
-		it('should allow to lock action', function() {
-			var result = '';
-			var before = function() {
-				result += 'a';
-				return true;
-			};
-			var action = off(function() {
-				result += 'b';
-			});
-			var after = function() {
-				result += 'c';
-			};
-		
-			action.add(after);
-			action.before(before);
-			
-			action();
-			
-			expect(result).toEqual("a");		
-		});
-		
 	});
 
 })
