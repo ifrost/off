@@ -1,11 +1,11 @@
 {
   "name": "off",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "main": "off.js",
   "scripts": {
     "test": "jasmine",
-	"prepublish": "uglifyjs off.js --mangle --compress -o off-min.js"
+    "prepublish": "uglifyjs off.js --mangle --compress -o off-min.js"
   },
   "repository": {
     "type": "git",
