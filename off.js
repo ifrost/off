@@ -130,7 +130,7 @@
 			if (throttle && last_callback) {
 				last_callback.lock = true;
 			}
-			last_callback = callback = off(function () {}, this);
+			last_callback = callback = off(function (value) {return value}, this);
 			var args = Array.prototype.slice.call(arguments, 0).concat(callback);
 			func.apply(this, args);
 			return callback;
