@@ -121,7 +121,7 @@ moreThan10.before(function(value){
 Locking
 -------
 
-Another way of interrupting the flow is locking. It's useful when you want to lock executing handlers, e.g.:
+Another way of interrupting the flow is locking handlers, e.g.:
 
 ```js
 var foo = off(function(value){
@@ -137,13 +137,13 @@ foo.add(function(value){console.log("Value =",value)});
 
 > foo(1);
 > foo(11);
-> Value = 101
+> Value = 11
 ```
 
 Async
 -----
 
-Observable function may be asynchronous. The last param passed to the observable function is done callback/signal. Running this callback finished async call and run all assigned handlers. Value passed to the done() callback is the result of async call and it's passed to all handlers;
+Observable function may be asynchronous. The last param passed to the observable function is done callback. Running this callback finished async call and run all assigned handlers. Value passed to the done() callback is the result of async call and it's passed to all handlers;
 
 ```js
 var async = off.async(function(text, done){
