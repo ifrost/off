@@ -13,20 +13,17 @@ $ npm install off
 Usage
 -----
 
-You can wrap any function to make it observable.
+You can wrap any function to make it observable. Create a handler and add to the observable using .add():
 
 ```js
 var observable = off(function(){
 	console.log('observable called');
 });
-```
 
-To observe a function, use add:
-
-```js
 var handler = function(){
 	console.log('handler called');
 }
+
 observable.add(handler);
 ```
 
@@ -86,7 +83,7 @@ Component.prototype.setSize = function(width, height) {
 Properties
 ----------
 
-A property is an observable function that saves the passed value. To set the value pass it as an argument. To get the value run the property without any arguments.
+A property is an observable function that saves the passed value. Pass a value as an argument to set it. To get the value run the property function without any arguments.
 
 A property handler is called only if value of the property changes.
 
@@ -102,9 +99,9 @@ A property handler is called only if value of the property changes.
 Before / Blocking
 -----------------
 
-Handlers added by .add are run after the observable functions. It's also possible to run a handler before the main body of the observable function is executed. If any of before-handlers returns "true", the observable function is blocked.
+Handlers added by .add() are run after the observable functions. It's also possible to run a handler before the main body of the observable function is executed. If any of before-handlers returns "true", the observable function is blocked.
 
-```
+```js
 var moreThan10 = off(function(value) {
     console.log(value);
 });
@@ -120,6 +117,7 @@ moreThan10.before(function(value){
 > moreThan10(10);
 > moreThan10(11)
 > 11
+```
 
 Async
 -----
