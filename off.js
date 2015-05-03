@@ -161,5 +161,14 @@
 		return deferred;
 	};
 
+	off.decorate = function (obj) {
+		for (var property in obj) {
+			if (typeof (obj[property]) === "function" && ! (obj[property]._off)) {
+				obj[property] = off(obj[property]);
+			}
+		}
+		return obj;
+	}
+
 	return off;
 });

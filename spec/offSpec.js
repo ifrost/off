@@ -195,6 +195,32 @@ describe('off', function () {
 		expect(result).toEqual("a");
 	});
 
+	it('should decorate all object methods', function() {
+		var test = function() {};
+
+		var obj = {
+			foo: 'bar',
+			test: test
+		};
+
+		var obj = off.decorate(obj);
+
+		expect(obj.foo).toEqual('bar');
+		expect(obj.test).not.toBe(test);
+		expect(obj.test._off).toBe(true);
+	});
+
+	it('should not decorate already wrapped methods', function() {
+		var wrapped_test = off(function(){});
+
+		var obj = {
+			wrapped_test: wrapped_test
+		};
+
+		obj = off.decorate(obj);
+		expect(obj.wrapped_test).toBe(wrapped_test);
+	});
+
 	describe('signal', function () {
 
 		var signal;
