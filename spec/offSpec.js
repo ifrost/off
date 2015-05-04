@@ -221,6 +221,30 @@ describe('off', function () {
 		expect(obj.wrapped_test).toBe(wrapped_test);
 	});
 
+	it('should allow to override functions', function(){
+		var base = {
+			create_text: off(function(value){
+				this.text = value;
+				return value;
+			})
+		};
+
+		var foo = Object.create(base);
+		foo.create_text.override(function(value, $super){
+			this.text = 'foo: ' + $super(value);
+			return this.text;
+		});
+
+		var bar = Object.create(foo);
+		bar.create_text.override(function(value, $super){
+			this.text = $super(value) + '!';
+			return this.text;
+		});
+
+		bar.create_text('test');
+		expect(bar.text).toBe('foo: test!');
+	});
+
 	describe('signal', function () {
 
 		var signal;

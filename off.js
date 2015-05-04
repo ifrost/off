@@ -29,7 +29,7 @@
 				return;
 			}
 
-			result = func.apply(this, args);
+			result = runner.func.apply(self, args);
 
 			if (runner.lock) {
 				runner.lock = false;
@@ -52,7 +52,7 @@
 				_before.push(handler);
 			}
 			return runner;
-		}
+		};
 
 		runner.add = function (handler, options) {
 			options = options || {};
@@ -60,6 +60,15 @@
 				_handlers.push(handler);
 			}
 			return runner;
+		};
+
+		runner.override = function(override) {
+			var func = runner.func;
+			runner.func = function() {
+				var args = Array.prototype.slice.call(arguments, 0);
+				args.push(func.bind(this));
+				return override.apply(this, args);
+			}
 		};
 
 		runner.remove = function (handler) {
@@ -168,7 +177,7 @@
 			}
 		}
 		return obj;
-	}
+	};
 
 	return off;
 });
