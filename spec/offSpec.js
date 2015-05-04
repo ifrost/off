@@ -245,6 +245,17 @@ describe('off', function () {
 		expect(bar.text).toBe('foo: test!');
 	});
 
+	it('should pass result and args to handlers', function() {
+		var method = off(function(a) {
+				return a + 1;
+			});
+
+		method.add(handler);
+		method(1);
+
+		expect(handler).toHaveBeenCalledWith(2, [1]);
+	});
+
 	describe('signal', function () {
 
 		var signal;
@@ -258,7 +269,7 @@ describe('off', function () {
 
 			signal('test');
 
-			expect(handler).toHaveBeenCalledWith('test');
+			expect(handler).toHaveBeenCalledWith('test', jasmine.any(Object));
 
 		});
 

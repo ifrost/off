@@ -38,7 +38,7 @@
 					if (result instanceof Function && result._off) {
 						result.add(handler);
 					} else {
-						handler.call(self, result);
+						handler.apply(self, [result, args]);
 					}
 				});
 			}
