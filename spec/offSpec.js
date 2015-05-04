@@ -230,13 +230,13 @@ describe('off', function () {
 		};
 
 		var foo = Object.create(base);
-		foo.create_text.override(function(value, $super){
+		foo.create_text.override(function($super, value){
 			this.text = 'foo: ' + $super(value);
 			return this.text;
 		});
 
 		var bar = Object.create(foo);
-		bar.create_text.override(function(value, $super){
+		bar.create_text.override(function($super, value){
 			this.text = $super(value) + '!';
 			return this.text;
 		});

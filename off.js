@@ -66,7 +66,7 @@
 			var func = runner.func;
 			runner.func = function() {
 				var args = Array.prototype.slice.call(arguments, 0);
-				args.push(func.bind(this));
+				args.unshift(func.bind(this));
 				return override.apply(this, args);
 			}
 		};
