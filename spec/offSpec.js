@@ -253,7 +253,7 @@ describe('off', function () {
 		method.add(handler);
 		method(1);
 
-		expect(handler).toHaveBeenCalledWith(2, [1]);
+		expect(handler).toHaveBeenCalledWith(2, [1], jasmine.any(Object));
 	});
 
 	describe('signal', function () {
@@ -269,8 +269,51 @@ describe('off', function () {
 
 			signal('test');
 
-			expect(handler).toHaveBeenCalledWith('test', jasmine.any(Object));
+			expect(handler).toHaveBeenCalledWith('test', jasmine.any(Object), jasmine.any(Object));
 
+		});
+
+	});
+
+	describe('scopes', function() {
+
+		it('should cache scoped methods', function() {
+			var base = off.signal(),
+				foo = base.as('foo'),
+				foo2 = base.as('foo'),
+				bar = base.as('bar');
+
+			expect(foo).toEqual(foo2);
+			expect(foo).not.toEqual(bar);
+		});
+
+		it('should create cascaded scopes', function() {
+			var base = off.signal(),
+				foo = base.as('foo'),
+				foobar = base.as('foo').as('bar');
+
+			var base_spy = jasmine.createSpy(),
+				foo_spy = jasmine.createSpy(),
+				foobar_spy = jasmine.createSpy();
+
+			base.add(base_spy);
+			foo.add(foo_spy);
+			foobar.add(foobar_spy);
+
+			base('BASE');
+			expect(base_spy).toHaveBeenCalledWith('BASE', jasmine.any(Object), jasmine.any(Object));
+			expect(foo_spy).not.toHaveBeenCalledWith('BASE', jasmine.any(Object), jasmine.any(Object));
+			expect(foobar_spy).not.toHaveBeenCalledWith('BASE', jasmine.any(Object), jasmine.any(Object));
+
+			foo('FOO');
+			expect(base_spy).toHaveBeenCalledWith('FOO', jasmine.any(Object), jasmine.any(Object));
+			expect(foo_spy).toHaveBeenCalledWith('FOO', jasmine.any(Object), jasmine.any(Object));
+			expect(foobar_spy).not.toHaveBeenCalledWith('FOO', jasmine.any(Object), jasmine.any(Object));
+
+			foobar('FOOBAR');
+			expect(base_spy).toHaveBeenCalledWith('FOOBAR', jasmine.any(Object), jasmine.any(Object));
+			expect(foo_spy).toHaveBeenCalledWith('FOOBAR', jasmine.any(Object), jasmine.any(Object));
+			expect(foobar_spy).toHaveBeenCalledWith('FOOBAR', jasmine.any(Object), jasmine.any(Object));
 		});
 
 	});
@@ -343,6 +386,22 @@ describe('off', function () {
 
 			property.reset();
 			expect(handler.calls.count()).toEqual(2);
+		});
+
+		it('should allow to create private/public properties', function(){
+			var _foo = off.property(),
+				foo = off.property(_foo);
+
+			foo.add(handler);
+			_foo(1);
+			expect(handler.calls.count()).toEqual(0);
+			expect(foo()).toEqual(1);
+			expect(_foo()).toEqual(1);
+
+			foo(2);
+			expect(handler.calls.count()).toEqual(1);
+			expect(foo()).toEqual(2);
+			expect(_foo()).toEqual(2);
 		});
 	});
 

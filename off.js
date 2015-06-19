@@ -38,7 +38,7 @@
 					if (result instanceof Function && result._off) {
 						result.add(handler);
 					} else {
-						handler.apply(self, [result, args]);
+						handler.apply(self, [result, args, self]);
 					}
 				});
 			}
@@ -78,6 +78,13 @@
 			}
 		};
 
+		runner._scopes = {};
+
+		runner.as = function(name) {
+			runner._scopes[name] = runner._scopes[name] || off(runner);
+			return runner._scopes[name];
+		};
+
 		runner._off = true;
 
 		runner.func = func;
@@ -105,7 +112,7 @@
 		property = off(function (value, reset) {
 			if (arguments.length === 0 && reset !== _reset) {
 				property.lock = true;
-				return _value;
+				return $guard();
 			} else {
 				return setter(value, $guard);
 			}
@@ -126,8 +133,13 @@
 			}
 			return _value;
 		};
+
+		if (typeof initial_value === 'function' && initial_value._property) {
+			$guard = initial_value;
+		}
+
 		$guard.property = property;
-		property.property = true;
+		property._property = true;
 
 		return property;
 	};
