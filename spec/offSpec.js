@@ -3,8 +3,7 @@ describe('off', function () {
 	var off = require('../off'),
 		handler,
 		fn,
-		async,
-		throttled_async;
+		async;
 
 	beforeEach(function () {
 		handler = jasmine.createSpy();
@@ -13,9 +12,6 @@ describe('off', function () {
 			setTimeout(callback, 10);
 		});
 
-		throttled_async = off.async(function (callback) {
-			setTimeout(callback, 10);
-		}, true);
 	});
 
 	it('should run handlers after running wrapped function', function () {
@@ -95,19 +91,6 @@ describe('off', function () {
 
 	});
 
-	it('should run only the last async callback when called multiple times', function (done) {
-		throttled_async.add(handler);
-
-		throttled_async();
-		throttled_async();
-		throttled_async();
-
-		setTimeout(function () {
-			expect(handler.calls.count()).toEqual(1);
-			done();
-		}, 20);
-	});
-
 	it('should correctly handle context of the sync handler', function () {
 		var context = {
 			action: fn,
@@ -131,27 +114,6 @@ describe('off', function () {
 
 		context.action.add(context.handler);
 		context.action();
-	});
-
-	it('should allow making a deffered call', function (done) {
-		var action = function (value) {
-			expect(value).toEqual(10);
-			return 10;
-		};
-		var handler = function (value) {
-			expect(value).toEqual(10);
-			done();
-		}
-		var deferred = off.deferred(action, function (fn) {
-			setTimeout(fn, 40);
-		});
-
-		deferred.add(handler);
-
-		deferred(1);
-		deferred(5);
-		deferred(10);
-
 	});
 
 	it('should allow to add a before handler', function () {
@@ -253,7 +215,7 @@ describe('off', function () {
 		method.add(handler);
 		method(1);
 
-		expect(handler).toHaveBeenCalledWith(2, [1], jasmine.any(Object));
+		expect(handler).toHaveBeenCalledWith(2);
 	});
 
 	describe('signal', function () {
@@ -269,7 +231,7 @@ describe('off', function () {
 
 			signal('test');
 
-			expect(handler).toHaveBeenCalledWith('test', jasmine.any(Object), jasmine.any(Object));
+			expect(handler).toHaveBeenCalledWith('test');
 
 		});
 
@@ -301,19 +263,19 @@ describe('off', function () {
 			foobar.add(foobar_spy);
 
 			base('BASE');
-			expect(base_spy).toHaveBeenCalledWith('BASE', jasmine.any(Object), jasmine.any(Object));
-			expect(foo_spy).not.toHaveBeenCalledWith('BASE', jasmine.any(Object), jasmine.any(Object));
-			expect(foobar_spy).not.toHaveBeenCalledWith('BASE', jasmine.any(Object), jasmine.any(Object));
+			expect(base_spy).toHaveBeenCalledWith('BASE');
+			expect(foo_spy).not.toHaveBeenCalledWith('BASE');
+			expect(foobar_spy).not.toHaveBeenCalledWith('BASE');
 
 			foo('FOO');
-			expect(base_spy).toHaveBeenCalledWith('FOO', jasmine.any(Object), jasmine.any(Object));
-			expect(foo_spy).toHaveBeenCalledWith('FOO', jasmine.any(Object), jasmine.any(Object));
-			expect(foobar_spy).not.toHaveBeenCalledWith('FOO', jasmine.any(Object), jasmine.any(Object));
+			expect(base_spy).toHaveBeenCalledWith('FOO');
+			expect(foo_spy).toHaveBeenCalledWith('FOO');
+			expect(foobar_spy).not.toHaveBeenCalledWith('FOO');
 
 			foobar('FOOBAR');
-			expect(base_spy).toHaveBeenCalledWith('FOOBAR', jasmine.any(Object), jasmine.any(Object));
-			expect(foo_spy).toHaveBeenCalledWith('FOOBAR', jasmine.any(Object), jasmine.any(Object));
-			expect(foobar_spy).toHaveBeenCalledWith('FOOBAR', jasmine.any(Object), jasmine.any(Object));
+			expect(base_spy).toHaveBeenCalledWith('FOOBAR');
+			expect(foo_spy).toHaveBeenCalledWith('FOOBAR');
+			expect(foobar_spy).toHaveBeenCalledWith('FOOBAR');
 		});
 
 	});
@@ -354,19 +316,6 @@ describe('off', function () {
 			expect(handler.calls.count()).toEqual(2);
 		});
 
-		it('should accept custom setters', function () {
-			var increment = off.property(0, function (value, guard) {
-				guard(guard() + value);
-			});
-
-			increment(2);
-			expect(increment()).toEqual(2);
-
-			increment(3);
-			expect(increment()).toEqual(5);
-
-		});
-
 		it('should run handler added with bind() if value is defined', function () {
 
 			property(20);
@@ -374,18 +323,6 @@ describe('off', function () {
 			property.bind(handler);
 
 			expect(handler).toHaveBeenCalledWith(20);
-		});
-
-		it('should allow to reset the value to re-run all handlers', function () {
-			property.add(handler);
-
-			property(11);
-			property(11);
-
-			expect(handler.calls.count()).toEqual(1);
-
-			property.reset();
-			expect(handler.calls.count()).toEqual(2);
 		});
 
 		it('should allow to create private/public properties', function(){
