@@ -49,20 +49,32 @@
 			return result;
 		};
 
-		runner.before = function (handler, options) {
-			options = options || {};
-			if (_before.indexOf(handler) === -1 || options.force_add) {
+		runner.before = function (handler) {
+			if (_before.indexOf(handler) === -1) {
 				_before.push(handler);
 			}
 			return runner;
 		};
 
-		runner.add = function (handler, options) {
-			options = options || {};
-			if (_handlers.indexOf(handler) === -1 || options.force_add) {
+		runner.before.remove = function(handler) {
+			var index = _before.indexOf(handler);
+			if (index !== -1) {
+				_before.splice(index, 1);
+			}
+		};
+
+		runner.add = function (handler) {
+			if (_handlers.indexOf(handler) === -1) {
 				_handlers.push(handler);
 			}
 			return runner;
+		};
+
+		runner.remove = function (handler) {
+			var index = _handlers.indexOf(handler);
+			if (index !== -1) {
+				_handlers.splice(index, 1);
+			}
 		};
 
 		runner.override = function(override) {
@@ -71,13 +83,6 @@
 				var args = Array.prototype.slice.call(arguments, 0);
 				args.unshift(func.bind(this));
 				return override.apply(this, args);
-			}
-		};
-
-		runner.remove = function (handler) {
-			var index = _handlers.indexOf(handler);
-			if (index !== -1) {
-				_handlers.splice(index, 1);
 			}
 		};
 
@@ -98,10 +103,11 @@
 	off.signal = function () {
 		var last = undefined,
 			triggered = false,
-			result = off(function (value) {
-				triggered = true;
-				last = value;
-				return value;
+			result;
+		result = off(function (value) {
+			triggered = true;
+			last = value;
+			return value;
 		});
 		result.bind = function() {
 			result.add(handler);
