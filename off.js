@@ -149,18 +149,14 @@
         return property;
     };
 
-    off.async = function (func) {
-        var last_callback = null;
-        return off(function () {
-            var callback;
-            if (last_callback) {
-                last_callback.lock = true;
-            }
-            last_callback = callback = off(function (value) {return value}, this);
-            var args = Array.prototype.slice.call(arguments, 0).concat(callback);
+    off.async = function(func) {
+        var done = off.signal();
+        var result = off(function(){
+            var args = [done].concat(Array.prototype.slice.call(arguments, 0));
             func.apply(this, args);
-            return callback;
+            return done;
         });
+        return result;
     };
 
     off.decorate = function (obj) {

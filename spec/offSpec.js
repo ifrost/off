@@ -103,17 +103,19 @@ describe('off', function () {
         context.action();
     });
 
-    it('should correctly handle context of the async handler', function (done) {
-        var context = {
-            action: async,
-            handler: function () {
-                expect(this).toEqual(context);
-                done();
-            }
-        };
+    it('should run all handlers for async calls', function(done){
+        var handler2 = jasmine.createSpy();
+        async.add(handler);
+        async.add(handler2);
 
-        context.action.add(context.handler);
-        context.action();
+        async();
+        async();
+
+        setTimeout(function(){
+            expect(handler.calls.count()).toEqual(2);
+            expect(handler2.calls.count()).toEqual(2);
+            done();
+        }, 30);
     });
 
     it('should allow to add a before handler', function () {
