@@ -16,8 +16,9 @@
         func = func || function () {};
 
         var runner = function () {
-            var self = context || this,
-                args, blocked, result;
+            var args, blocked, result;
+
+            runner.self = runner.self || this;
 
             args = Array.prototype.slice.call(arguments, 0);
 
@@ -29,7 +30,7 @@
                 return;
             }
 
-            result = runner.func.apply(self, args);
+            result = runner.func.apply(runner.self, args);
 
             if (runner.lock) {
                 runner.lock = false;
@@ -41,12 +42,22 @@
                     if (result instanceof Function && result._off) {
                         result.add(handler);
                     } else {
-                        handler.call(self, result);
+                        handler.call(runner.self, result);
                     }
                 });
             }
 
+            runner.last = result;
+
             return result;
+        };
+
+        runner.context = context;
+
+        runner.refresh = function() {
+            _handlers.forEach(function(handler){
+                handler.call(runner.self, runner.last);
+            })
         };
 
         runner.before = function (handler) {
@@ -70,6 +81,13 @@
             return runner;
         };
 
+        runner.bind = function(handler) {
+            if (runner.last !== undefined) {
+                handler(runner.last);
+            }
+            runner.add(handler);
+        };
+
         runner.remove = function (handler) {
             var index = _handlers.indexOf(handler);
             if (index !== -1) {
@@ -86,6 +104,8 @@
             }
         };
 
+        runner.last = undefined;
+
         runner._scopes = {};
 
         runner.as = function(name) {
@@ -101,52 +121,38 @@
     };
 
     off.signal = function () {
-        var last = undefined,
-            triggered = false,
-            result;
+        var result;
         result = off(function (value) {
-            triggered = true;
-            last = value;
             return value;
         });
-        result.bind = function() {
-            result.add(handler);
-            if (triggered) {
-                handler(last);
-            }
-        };
         return result;
     };
 
-    off.property = function (setget) {
-        if (typeof setget !== "function") {
-            var _v = setget;
-            setget = function(v) {
-                return arguments.length === 1 ? _v = v : _v;
-            }
-        }
-
+    off.property = function (default_value) {
         var property = off(function(value){
-            if (arguments.length === 1 && setget() !== value) {
-                return setget(value);
+            if (arguments.length === 1 && value !== property.value) {
+                property.value = value;
             }
             else {
                 property.lock = true;
-                return setget();
             }
+            return property.value;
         });
 
-        property.setget = setget;
+        property.value = default_value;
 
-        property.bind = function(handler) {
-            property.add(handler);
-            if (setget() !== undefined) {
-                handler(setget());
-            }
-        };
-
-        property._property = true;
         return property;
+    };
+
+    off.list = function() {
+        var list = off.property([]);
+        list.push = off(function(object){
+            list.value.push(object);
+            list.last = list.value;
+            list.refresh();
+            return object;
+        });
+        return list;
     };
 
     off.async = function(func) {
@@ -166,6 +172,45 @@
             }
         }
         return obj;
+    };
+
+    off.repo = function(fn) {
+        var _triggers = {},
+            _bindings = {};
+        var factory = off(fn);
+        factory.when = function(trigger, action) {
+            _triggers[trigger] = action;
+        };
+        factory.feed = function(destination, source) {
+            _bindings[destination] = source;
+        };
+        factory.add(function(instance){
+            factory.one(instance);
+            factory.all.push(instance);
+            Object.keys(_triggers).forEach(function(trigger){
+                instance[trigger].add(_triggers[trigger]);
+            });
+            Object.keys(_bindings).forEach(function(destination){
+                if (!instance[destination]) {
+                    throw new Error('Missing ' + destination);
+                }
+                _bindings[destination].bind(instance[destination]);
+            });
+        });
+        factory.one = off.property();
+        factory.all = off.list();
+
+        factory._scopes = {};
+        factory.as = function(name) {
+            factory._scopes[name] = factory._scopes[name] || off.repo(factory);
+            return factory._scopes[name];
+        };
+
+        factory.copy = function() {
+            return off.repo(fn);
+        };
+
+        return factory;
     };
 
     return off;

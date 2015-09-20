@@ -237,6 +237,16 @@ describe('off', function () {
 
         });
 
+
+        it('should run handler added with bind() if signal has been already dispatched', function () {
+
+            signal(20);
+
+            signal.bind(handler);
+
+            expect(handler).toHaveBeenCalledWith(20);
+        });
+
     });
 
     describe('scopes', function() {
@@ -326,22 +336,26 @@ describe('off', function () {
 
             expect(handler).toHaveBeenCalledWith(20);
         });
+    });
 
-        it('should allow to create private/public properties', function(){
-            var _foo = off.property(),
-                foo = off.property(_foo);
+    describe('list', function() {
+        it('test case', function(){
+            var list = off.list();
 
-            foo.add(handler);
-            _foo(1);
-            expect(handler.calls.count()).toEqual(0);
-            expect(foo()).toEqual(1);
-            expect(_foo()).toEqual(1);
+            list.push(1);
 
-            foo(2);
-            expect(handler.calls.count()).toEqual(1);
-            expect(foo()).toEqual(2);
-            expect(_foo()).toEqual(2);
+            list.add(function(v){
+                expect(v[0]).toBe(1);
+                expect(v[1]).toBe(2);
+            });
+            list.push.add(function(v){
+                expect(v).toBe(2);
+            });
+
+            list.push(2);
+            expect(list()[0]).toBe(1);
+            expect(list()[1]).toBe(2);
         });
     });
 
-})
+});
