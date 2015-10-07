@@ -339,7 +339,27 @@ describe('off', function () {
     });
 
     describe('list', function() {
-        it('test case', function(){
+
+        it('should allow to add elements', function(){
+            var list = off.list();
+
+            list.push(1);
+            list.push(2);
+
+            expect(list()[0]).toBe(1);
+            expect(list()[1]).toBe(2);
+        });
+
+        it('should allow to remove elements', function(){
+            var list = off.list([1,2]);
+
+            list.remove(1);
+
+            expect(list()[0]).toBe(2);
+            expect(list().length).toBe(1);
+        });
+
+        it('should dispatch changes when array changes', function(){
             var list = off.list();
 
             list.push(1);
@@ -348,13 +368,20 @@ describe('off', function () {
                 expect(v[0]).toBe(1);
                 expect(v[1]).toBe(2);
             });
+
+            list.push(2);
+        });
+
+        it('should allow to listen to push', function(){
+            var list = off.list();
+
+            list.push(1);
+
             list.push.add(function(v){
                 expect(v).toBe(2);
             });
 
             list.push(2);
-            expect(list()[0]).toBe(1);
-            expect(list()[1]).toBe(2);
         });
     });
 

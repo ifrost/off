@@ -35,29 +35,26 @@
             if (runner.lock) {
                 runner.lock = false;
             } else {
-                _handlers.forEach(function (handler) {
-                    if (result instanceof Function && result.off && result.bind) {
-                        result.bind(handler);
-                    }
-                    if (result instanceof Function && result._off) {
-                        result.add(handler);
-                    } else {
-                        handler.call(runner.self, result);
-                    }
-                });
+                runner._dispatch(result);
+                runner.last = result;
             }
-
-            runner.last = result;
 
             return result;
         };
 
         runner.context = context;
 
-        runner.refresh = function() {
-            _handlers.forEach(function(handler){
-                handler.call(runner.self, runner.last);
-            })
+        runner._dispatch = function(result) {
+            _handlers.forEach(function (handler) {
+                if (result instanceof Function && result.off && result.bind) {
+                    result.bind(handler);
+                }
+                if (result instanceof Function && result._off) {
+                    result.add(handler);
+                } else {
+                    handler.call(runner.self, result);
+                }
+            });
         };
 
         runner.before = function (handler) {
@@ -130,27 +127,33 @@
 
     off.property = function (default_value) {
         var property = off(function(value){
-            if (arguments.length === 1 && value !== property.value) {
-                property.value = value;
+            if (arguments.length === 1 && value !== property.last) {
+                return value;
             }
             else {
                 property.lock = true;
+                return property.last;
             }
-            return property.value;
         });
 
-        property.value = default_value;
+        property.last = default_value;
 
         return property;
     };
 
-    off.list = function() {
-        var list = off.property([]);
+    off.list = function(default_list) {
+        var list = off.property(default_list || []);
         list.push = off(function(object){
-            list.value.push(object);
-            list.last = list.value;
-            list.refresh();
+            list.last.push(object);
+            list._dispatch(this.last);
             return object;
+        });
+        list.remove = off(function(object){
+            var index = list.last.indexOf(object);
+            if (index !== -1) {
+                list.last.splice(index, 1);
+                list._dispatch(list.last);
+            }
         });
         return list;
     };
