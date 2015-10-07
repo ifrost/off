@@ -174,44 +174,5 @@
         return obj;
     };
 
-    off.repo = function(fn) {
-        var _triggers = {},
-            _bindings = {};
-        var factory = off(fn);
-        factory.when = function(trigger, action) {
-            _triggers[trigger] = action;
-        };
-        factory.feed = function(destination, source) {
-            _bindings[destination] = source;
-        };
-        factory.add(function(instance){
-            factory.one(instance);
-            factory.all.push(instance);
-            Object.keys(_triggers).forEach(function(trigger){
-                instance[trigger].add(_triggers[trigger]);
-            });
-            Object.keys(_bindings).forEach(function(destination){
-                if (!instance[destination]) {
-                    throw new Error('Missing ' + destination);
-                }
-                _bindings[destination].bind(instance[destination]);
-            });
-        });
-        factory.one = off.property();
-        factory.all = off.list();
-
-        factory._scopes = {};
-        factory.as = function(name) {
-            factory._scopes[name] = factory._scopes[name] || off.repo(factory);
-            return factory._scopes[name];
-        };
-
-        factory.copy = function() {
-            return off.repo(fn);
-        };
-
-        return factory;
-    };
-
     return off;
 });
