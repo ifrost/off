@@ -385,4 +385,62 @@ describe('off', function () {
         });
     });
 
+    describe('extend', function(){
+
+        it('should run init when object is initialized', function() {
+
+            var Foo = off.extend(function(proto){
+                proto.init = function(value) {
+                    this.value = value;
+                }
+            });
+
+            var foo = Foo(10);
+
+            expect(foo.value).toBe(10);
+
+        });
+
+        it('should allow simple inheritance', function() {
+
+            var Base = off.extend(function(proto){
+                proto.name = function() {
+                    return 'BASE'
+                };
+                proto.test = function() {
+                    return this.name() + '!';
+                }
+            });
+
+            var Foo = Base.extend(function(proto){
+                proto.name = function() {
+                    return 'FOO';
+                }
+            });
+
+            var foo = Foo();
+            expect(foo.test()).toBe('FOO!');
+
+        });
+
+        it('should allow to access base methods', function(){
+
+            var Base = off.extend(function(proto){
+                proto.test = function() {
+                    return 2;
+                }
+            });
+
+            var Foo = Base.extend(function(proto, base){
+                proto.test = function() {
+                    return base.test.call(this) + 3;
+                }
+            });
+
+            var foo = Foo();
+            expect(foo.test()).toBe(5);
+        });
+
+    });
+
 });
