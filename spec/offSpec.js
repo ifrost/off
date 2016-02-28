@@ -91,18 +91,6 @@ describe('off', function () {
 
     });
 
-    it('should correctly handle context of the sync handler', function () {
-        var context = {
-            action: fn,
-            handler: function () {
-                expect(this).toEqual(context);
-            }
-        };
-
-        context.action.add(context.handler);
-        context.action();
-    });
-
     it('should run all handlers for async calls', function(done){
         var handler2 = jasmine.createSpy();
         async.add(handler);
@@ -167,7 +155,7 @@ describe('off', function () {
             test: test
         };
 
-        var obj = off.decorate(obj);
+        obj = off.decorate(obj);
 
         expect(obj.foo).toEqual('bar');
         expect(obj.test).not.toBe(test);
@@ -336,111 +324,6 @@ describe('off', function () {
 
             expect(handler).toHaveBeenCalledWith(20);
         });
-    });
-
-    describe('list', function() {
-
-        it('should allow to add elements', function(){
-            var list = off.list();
-
-            list.push(1);
-            list.push(2);
-
-            expect(list()[0]).toBe(1);
-            expect(list()[1]).toBe(2);
-        });
-
-        it('should allow to remove elements', function(){
-            var list = off.list([1,2]);
-
-            list.remove(1);
-
-            expect(list()[0]).toBe(2);
-            expect(list().length).toBe(1);
-        });
-
-        it('should dispatch changes when array changes', function(){
-            var list = off.list();
-
-            list.push(1);
-
-            list.add(function(v){
-                expect(v[0]).toBe(1);
-                expect(v[1]).toBe(2);
-            });
-
-            list.push(2);
-        });
-
-        it('should allow to listen to push', function(){
-            var list = off.list();
-
-            list.push(1);
-
-            list.push.add(function(v){
-                expect(v).toBe(2);
-            });
-
-            list.push(2);
-        });
-    });
-
-    describe('extend', function(){
-
-        it('should run init when object is initialized', function() {
-
-            var Foo = off.extend(function(proto){
-                proto.init = function(value) {
-                    this.value = value;
-                }
-            });
-
-            var foo = Foo(10);
-
-            expect(foo.value).toBe(10);
-
-        });
-
-        it('should allow simple inheritance', function() {
-
-            var Base = off.extend(function(proto){
-                proto.name = function() {
-                    return 'BASE'
-                };
-                proto.test = function() {
-                    return this.name() + '!';
-                }
-            });
-
-            var Foo = Base.extend(function(proto){
-                proto.name = function() {
-                    return 'FOO';
-                }
-            });
-
-            var foo = Foo();
-            expect(foo.test()).toBe('FOO!');
-
-        });
-
-        it('should allow to access base methods', function(){
-
-            var Base = off.extend(function(proto){
-                proto.test = function() {
-                    return 2;
-                }
-            });
-
-            var Foo = Base.extend(function(proto, base){
-                proto.test = function() {
-                    return base.test.call(this) + 3;
-                }
-            });
-
-            var foo = Foo();
-            expect(foo.test()).toBe(5);
-        });
-
     });
 
 });

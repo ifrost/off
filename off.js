@@ -9,9 +9,10 @@
         root.off = factory();
     }
 })(this, function () {
-    var off = function (func, context) {
+    var off = function (func) {
         var _handlers = [],
-            _before = [];
+            _before = [],
+            _scopes = {};
 
         func = func || function () {};
 
@@ -35,22 +36,17 @@
             if (runner.lock) {
                 runner.lock = false;
             } else {
-                runner._dispatch(result);
                 runner.last = result;
+                runner._dispatch(result);
             }
 
             return result;
         };
 
-        runner.context = context;
-
         runner._dispatch = function(result) {
             _handlers.forEach(function (handler) {
-                if (result instanceof Function && result.off && result.bind) {
-                    result.bind(handler);
-                }
                 if (result instanceof Function && result._off) {
-                    result.add(handler);
+                    result.bind(handler);
                 } else {
                     handler.call(runner.self, result);
                 }
@@ -103,11 +99,9 @@
 
         runner.last = undefined;
 
-        runner._scopes = {};
-
         runner.as = function(name) {
-            runner._scopes[name] = runner._scopes[name] || off(runner);
-            return runner._scopes[name];
+            _scopes[name] = _scopes[name] || off(runner);
+            return _scopes[name];
         };
 
         runner._off = true;
@@ -141,26 +135,9 @@
         return property;
     };
 
-    off.list = function(default_list) {
-        var list = off.property(default_list || []);
-        list.push = off(function(object){
-            list.last.push(object);
-            list._dispatch(this.last);
-            return object;
-        });
-        list.remove = off(function(object){
-            var index = list.last.indexOf(object);
-            if (index !== -1) {
-                list.last.splice(index, 1);
-                list._dispatch(list.last);
-            }
-        });
-        return list;
-    };
-
     off.async = function(func) {
-        var done = off.signal();
-        var result = off(function(){
+        var done = off.signal(), result;
+        result = off(function(){
             var args = [done].concat(Array.prototype.slice.call(arguments, 0));
             func.apply(this, args);
             return done;
@@ -175,20 +152,6 @@
             }
         }
         return obj;
-    };
-
-    off.extend = function(factory) {
-        var proto = Object.create(this === off ? Object.prototype : this), constructor;
-        factory(proto, this);
-        constructor = function() {
-            var instance = Object.create(proto);
-            if (instance.init instanceof  Function) {
-                instance.init.apply(instance, arguments);
-            }
-            return instance;
-        };
-        constructor.extend = off.extend.bind(proto);
-        return constructor;
     };
 
     return off;
