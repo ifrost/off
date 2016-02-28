@@ -34,6 +34,49 @@ describe('off', function () {
         expect(handler.calls.count()).toEqual(1);
     });
 
+    it('should handle context', function() {
+
+        var object = {
+            handler: function(r) {
+                this.result = r;
+            }
+        };
+
+        var source = {
+            value: 2,
+            fire: off(function(){
+                return this.value;
+            })
+        };
+
+        source.fire.add(object.handler, object);
+        source.fire();
+
+        expect(object.result).toBe(2);
+    });
+
+    it('should add/remove handlers by context', function() {
+
+        var a = {
+            handler: jasmine.createSpy()
+        };
+
+        var b = {
+            handler: jasmine.createSpy()
+        };
+
+        fn.add(a.handler, a);
+        fn.add(b.handler, b);
+
+        fn.remove(a.handler, a);
+        fn.remove(b.handler, {});
+
+        fn();
+
+        expect(a.handler).not.toHaveBeenCalled();
+        expect(b.handler).toHaveBeenCalled();
+    });
+
     it('should run handlers for async calls', function (done) {
         async.add(handler);
 
@@ -97,16 +140,15 @@ describe('off', function () {
         async.add(handler2);
 
         async();
-        async();
 
         setTimeout(function(){
-            expect(handler.calls.count()).toEqual(2);
-            expect(handler2.calls.count()).toEqual(2);
+            expect(handler.calls.count()).toEqual(1);
+            expect(handler2.calls.count()).toEqual(1);
             done();
         }, 30);
     });
 
-    it('should allow to add a before handler', function () {
+    it('should allow to add a before/after handler', function () {
         var result = '';
         var before = function () {
             result += 'a';

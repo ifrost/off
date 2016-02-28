@@ -9,6 +9,17 @@
         root.off = factory();
     }
 })(this, function () {
+
+    function find(handlers, method, context) {
+        var index = -1;
+        handlers.forEach(function(handler, i) {
+            if (handler.method === method && handler.context === context) {
+                index = i;
+            }
+        });
+        return index;
+    }
+
     var off = function (func) {
         var _handlers = [],
             _before = [],
@@ -19,19 +30,17 @@
         var runner = function () {
             var args, blocked, result;
 
-            runner.self = runner.self || this;
-
             args = Array.prototype.slice.call(arguments, 0);
 
             blocked = _before.some(function (handler) {
-                return handler.apply(this, args);
+                return handler.method.apply(handler.context, args);
             });
 
             if (blocked) {
                 return;
             }
 
-            result = runner.func.apply(runner.self, args);
+            result = runner.func.apply(this, args);
 
             if (runner.lock) {
                 runner.lock = false;
@@ -46,43 +55,43 @@
         runner._dispatch = function(result) {
             _handlers.forEach(function (handler) {
                 if (result instanceof Function && result._off) {
-                    result.bind(handler);
+                    result.bind(handler.method, handler.context);
                 } else {
-                    handler.call(runner.self, result);
+                    handler.method.call(handler.context, result);
                 }
             });
         };
 
-        runner.before = function (handler) {
-            if (_before.indexOf(handler) === -1) {
-                _before.push(handler);
+        runner.before = function (method, context) {
+            if (find(_before, method, context) === -1) {
+                _before.push({method: method, context: context});
             }
             return runner;
         };
 
-        runner.before.remove = function(handler) {
-            var index = _before.indexOf(handler);
+        runner.before.remove = function(method, context) {
+            var index = find(_before, method, context);
             if (index !== -1) {
                 _before.splice(index, 1);
             }
         };
 
-        runner.add = function (handler) {
-            if (_handlers.indexOf(handler) === -1) {
-                _handlers.push(handler);
+        runner.add = function (method, context) {
+            if (find(_handlers, method, context) === -1) {
+                _handlers.push({method: method, context: context});
             }
             return runner;
         };
 
-        runner.bind = function(handler) {
+        runner.bind = function(method, context) {
             if (runner.last !== undefined) {
-                handler(runner.last);
+                method.call(context, runner.last);
             }
-            runner.add(handler);
+            runner.add(method, context);
         };
 
-        runner.remove = function (handler) {
-            var index = _handlers.indexOf(handler);
+        runner.remove = function (method, context) {
+            var index = find(_handlers, method, context);
             if (index !== -1) {
                 _handlers.splice(index, 1);
             }
